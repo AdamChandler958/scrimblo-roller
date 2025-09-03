@@ -2,6 +2,8 @@ import discord
 from dotenv import load_dotenv
 import os
 
+from src.app.utils import get_secret
+
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
@@ -25,7 +27,7 @@ async def on_message(message):
     if message.content.startswith('hello bot'):
         await message.channel.send("Hello!")
 
-
-client.run(API_KEY)
+print(get_secret("api_key"))
+client.run(get_secret("api_key"))
 
 

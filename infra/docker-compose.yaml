@@ -1,0 +1,10 @@
+services:
+  scrimblo-roller:
+    build: ../
+    secrets:
+      - api_key
+
+
+secrets:
+  api_key:
+    file: ../.docker-secrets/api_key.txt
