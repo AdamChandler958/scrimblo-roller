@@ -1,41 +1,87 @@
 import random
 import re
 
+class DiceRoll:
+    def __init__(self, request: str):
+        self.request = request
+        self.num_dice = 0
+        self.diet_type = 0
+        self.keep_op = None
+        self.keep_val = 0
+        self.modifier_op = None
+        self.modifier_val = 0
+        self.all_rolls = []
+        self.kept_rolls = []
+        self.total = 0
+        self.error = None
+
+    def parse_request(self):
+        pattern = re.compile(r"^(\d*)d(\d+)(?:([kK][hH]|[kK][lL])(\d+))?(?:([+-])(\d+))?$")
+        match = pattern.match(self.request)
+
+        if not match:
+            self.error = "Invalid format."
+            return False
+
+
+        num_dice_str, die_type_str, self.keep_op, keep_val_str, self.modifier_op, modifier_val_str = match.groups()
+
+        self.num_dice = int(num_dice_str) if num_dice_str else 1
+        self.die_type = int(die_type_str)
+        self.keep_val = int(keep_val_str) if keep_val_str else 0
+        self.modifier_val = int(modifier_val_str) if modifier_val_str else 0
+
+        return True
+
+    def perform_roll(self):
+        if not self.parse_request():
+            return
+        
+        self.all_rolls = [random.randint(1, self.die_type) for _ in range(self.num_dice)]
+
+        if self.keep_op:
+            if "h" in self.keep_op.lower():
+                self.kept_rolls = sorted(self.all_rolls, reverse=True)[:self.keep_val]
+            elif "l" in self.keep_op.lower():
+                self.kept_rolls = sorted(self.all_rolls)[:self.keep_val]
+        else:
+            self.kept_rolls = self.all_rolls
+
+        self.total = sum(self.kept_rolls)
+
+        if self.modifier_op == "+":
+            self.total += self.modifier_val
+        elif self.modifier_op == "-":
+            self.total -= self.modifier_val
+
+    def _get_formatted_rolls(self) -> str:
+        formatted_parts = []
+        kept_rolls_copy = list(self.kept_rolls).copy()
+        
+        for roll in self.all_rolls:
+            if roll in kept_rolls_copy:
+                formatted_parts.append(str(roll))
+                kept_rolls_copy.remove(roll) 
+            else:
+                formatted_parts.append(f"~~{roll}~~")
+                
+        return f"[{', '.join(formatted_parts)}]"
+    
+    def get_result(self) -> dict:
+        if self.error:
+            return {"error": self.error}
+            
+        return {
+            "all_rolls": self.all_rolls,
+            "kept_rolls": self.kept_rolls,
+            "total": self.total,
+            "expression": self.request,
+            "formatted_rolls": self._get_formatted_rolls()
+        }
+
+
 def dice_roll(dice_size: str) -> int:
 
     val = random.randint(1, int(dice_size))
     return val
-
-# /roll 3d20+2
-
-# [8, 16, 20]+2 = 46
-
-def parse_dice_string(request: str) -> tuple[str, int]:
-    pattern = re.compile(r"(\d*)d(\d+)(?:([+-])(\d+))?")
-    match = pattern.match(request)
-
-    if not match:
-        return "Please use either NdN or NdN+M format"
-
-    num_dice_str, die_type_str, modifier_op, modifier_val_str = match.groups()
-
-    roll_list = []
-    for _ in range(int(num_dice_str)):
-        roll_list.append(dice_roll(die_type_str))
-
-    if modifier_op is not None:
-        if modifier_op == "+":
-            mod_mult = 1
-
-        else:
-            mod_mult = -1
-
-        sum_value = sum(roll_list) + (mod_mult*int(modifier_val_str))
-    else:
-        sum_value = sum(roll_list)
-
-    roll_strings= [str(roll) for roll in roll_list]
-    rolls_display = f"[{', '.join(roll_strings)}]"
-
-    return rolls_display, sum_value
 

@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from src.app.rolls import parse_dice_string
+from src.app.rolls import DiceRoll
 
 class DiceCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -10,17 +10,25 @@ class DiceCommands(commands.Cog):
     @discord.app_commands.describe(roll="The size and number of dice you wish to roll")
     async def roll_command(self, interaction: discord.Interaction, roll: str):
 
+        dice_roll = DiceRoll(roll)
+        dice_roll.perform_roll()
+        response = dice_roll.get_result()
+
+        if "error" in response:
+            await interaction.response.send_message(response.get("error"), ephemeral=True)
+            return
+
+
         dice_embedding = discord.Embed(
             title="Dice Roll Results",
-            description=f"Results for `{roll}`",
+            description=f"Results for `{response["expression"]}`",
             color=discord.Color.purple()
         )
-        rolls_display, total = parse_dice_string(roll)
 
-        dice_embedding.add_field(name="Rolls", value=rolls_display, inline=False)
-        dice_embedding.add_field(name="Total", value=str(total), inline=False)
+        dice_embedding.add_field(name="Rolls", value=response["formatted_rolls"], inline=False)
+        dice_embedding.add_field(name="Total", value=str(response["total"]), inline=False)
 
-        await interaction.channel.send(embed=dice_embedding)
+        await interaction.response.send_message(embed=dice_embedding)
 
 
 async def setup(bot: commands.Bot):
