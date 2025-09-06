@@ -1,6 +1,8 @@
 services:
   scrimblo-roller:
-    build: ../
+    build: 
+      context: ..
+      dockerfile: Dockerfile
     secrets:
       - api_key
 
