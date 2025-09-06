@@ -10,7 +10,7 @@ def dice_roll(dice_size: str) -> int:
 
 # [8, 16, 20]+2 = 46
 
-def parse_dice_string(request: str):
+def parse_dice_string(request: str) -> tuple[str, int]:
     pattern = re.compile(r"(\d*)d(\d+)(?:([+-])(\d+))?")
     match = pattern.match(request)
 
@@ -30,10 +30,12 @@ def parse_dice_string(request: str):
         else:
             mod_mult = -1
 
-    sum_value = sum(roll_list) + (mod_mult*int(modifier_val_str))
+        sum_value = sum(roll_list) + (mod_mult*int(modifier_val_str))
+    else:
+        sum_value = sum(roll_list)
 
     roll_strings= [str(roll) for roll in roll_list]
     rolls_display = f"[{', '.join(roll_strings)}]"
 
-    return f"{rolls_display} {modifier_op}{modifier_val_str} = {sum_value}"
+    return rolls_display, sum_value
 
