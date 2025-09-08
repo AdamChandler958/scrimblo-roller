@@ -78,10 +78,3 @@ class DiceRoll:
             "expression": self.request,
             "formatted_rolls": self._get_formatted_rolls()
         }
-
-
-def dice_roll(dice_size: str) -> int:
-
-    val = random.randint(1, int(dice_size))
-    return val
-
