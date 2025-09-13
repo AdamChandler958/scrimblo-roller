@@ -1,38 +1,61 @@
-import random
+import random 
 import re
 
 class DiceRoll:
     def __init__(self, request: str):
         self.request = request
-        self.num_dice = 0
-        self.diet_type = 0
-        self.keep_op = None
-        self.keep_val = 0
-        self.modifier_op = None
-        self.modifier_val = 0
         self.comment = "Dice Roll Results."
-        self.all_rolls = []
-        self.kept_rolls = []
+        self.rolls = []
         self.total = 0
         self.error = None
+        self.expression = None
 
     def parse_request(self):
-        pattern = re.compile(r"^(\d*)d(\d+)(?:([kK][hH]|[kK][lL])(\d+))?(?:([+-])(\d+))?\s*(.*)?$")
-        match = pattern.match(self.request)
+        roll_pattern = re.compile(r"([+-]?)\s*(?:(\d*)d(\d+)(?:([kK][hH]|[kK][lL])(\d+))?|(\d+))")
 
-        if not match:
+        comment_pattern = re.compile(r"^(.*?)(?:\s+(.*))?$")
+        
+        match = comment_pattern.match(self.request)
+        main_request = match.group(1)
+        print(main_request)
+        self.expression = main_request
+        self.comment = match.group(2).removesuffix(' ') if match.group(2) else "Dice Roll Results."
+
+        components = roll_pattern.findall(main_request)
+        
+        if not components:
             self.error = "Invalid format."
             return False
+        
+        self.rolls = []
+        for sign, num_dice_str, die_type_str, keep_op, keep_val_str, modifier_val_str in components:
+            component = {
+                "sign": sign if sign else "+",
+                "expression": "", 
+                "num_dice": 0,
+                "die_type": 0,
+                "keep_op": None,
+                "keep_val": "",
+                "modifier_val": 0,
+                "all_rolls": [],
+                "kept_rolls": [],
+                "total": 0,
+                "formatted_rolls": ""
+            }
 
+            if die_type_str:
+                component["num_dice"] = int(num_dice_str) if num_dice_str else 1
+                component["die_type"] = int(die_type_str)
+                component["expression"] = f"{component['num_dice']}d{component['die_type']}"
+                if keep_op:
+                    component["keep_op"] = keep_op
+                    component["keep_val"] = int(keep_val_str)
+                    component["expression"] += f"{keep_op}{component['keep_val']}"
+            else:
+                component["modifier_val"] = int(modifier_val_str)
+                component["expression"] = str(component["modifier_val"])
 
-        num_dice_str, die_type_str, self.keep_op, keep_val_str, self.modifier_op, modifier_val_str, comment = match.groups()
-
-        self.num_dice = int(num_dice_str) if num_dice_str else 1
-        self.die_type = int(die_type_str)
-        self.keep_val = int(keep_val_str) if keep_val_str else 0
-        self.modifier_val = int(modifier_val_str) if modifier_val_str else 0
-        self.comment = comment
-        self.request = self.request.removesuffix(self.comment).strip(' ')
+            self.rolls.append(component)
 
         return True
 
@@ -40,28 +63,47 @@ class DiceRoll:
         if not self.parse_request():
             return
         
-        self.all_rolls = [random.randint(1, self.die_type) for _ in range(self.num_dice)]
-
-        if self.keep_op:
-            if "h" in self.keep_op.lower():
-                self.kept_rolls = sorted(self.all_rolls, reverse=True)[:self.keep_val]
-            elif "l" in self.keep_op.lower():
-                self.kept_rolls = sorted(self.all_rolls)[:self.keep_val]
-        else:
-            self.kept_rolls = self.all_rolls
-
-        self.total = sum(self.kept_rolls)
-
-        if self.modifier_op == "+":
-            self.total += self.modifier_val
-        elif self.modifier_op == "-":
-            self.total -= self.modifier_val
-
-    def _get_formatted_rolls(self) -> str:
-        formatted_parts = []
-        kept_rolls_copy = list(self.kept_rolls).copy()
+        grand_total = 0
         
-        for roll in self.all_rolls:
+        for roll_data in self.rolls:
+            if roll_data["die_type"] > 0:
+                all_rolls = [random.randint(1, roll_data["die_type"]) for _ in range(roll_data["num_dice"])]
+                roll_data["all_rolls"] = all_rolls
+                
+                if roll_data["keep_op"]:
+                    if "h" in roll_data["keep_op"].lower():
+                        kept_rolls = sorted(all_rolls, reverse=True)[:roll_data["keep_val"]]
+                    elif "l" in roll_data["keep_op"].lower():
+                        kept_rolls = sorted(all_rolls)[:roll_data["keep_val"]]
+                    roll_data["kept_rolls"] = kept_rolls
+                else:
+                    roll_data["kept_rolls"] = all_rolls
+
+                component_total = sum(roll_data["kept_rolls"])
+                roll_data["total"] = component_total
+            else:
+
+                component_total = roll_data["modifier_val"]
+                roll_data["total"] = component_total
+
+
+            if roll_data["sign"] == "-":
+                grand_total -= component_total
+            else:
+                grand_total += component_total
+
+            roll_data["formatted_rolls"] = self._get_formatted_rolls(roll_data)
+
+        self.total = grand_total
+
+    def _get_formatted_rolls(self, roll_data) -> str:
+        if not roll_data["all_rolls"]:
+            return ""
+
+        formatted_parts = []
+        kept_rolls_copy = list(roll_data["kept_rolls"]).copy()
+        
+        for roll in roll_data["all_rolls"]:
             if roll in kept_rolls_copy:
                 formatted_parts.append(str(roll))
                 kept_rolls_copy.remove(roll) 
@@ -74,11 +116,22 @@ class DiceRoll:
         if self.error:
             return {"error": self.error}
             
-        return {
-            "all_rolls": self.all_rolls,
-            "kept_rolls": self.kept_rolls,
-            "total": self.total,
-            "expression": self.request,
-            "formatted_rolls": self._get_formatted_rolls(),
-            "comment": self.comment
+        formatted_expression = []
+
+        for roll_data in self.rolls:
+            if roll_data['die_type'] > 0:
+                component_string = f" {roll_data['sign']} {roll_data['num_dice']}d{roll_data['die_type']}{roll_data['keep_op'] if roll_data['keep_op'] else ""}{roll_data['keep_val']}: {roll_data['formatted_rolls']} ({roll_data['total']})"
+            else:
+                component_string = f" {roll_data['sign']} {roll_data['modifier_val']}"
+            formatted_expression.append(component_string)
+
+        result = {
+            "grand_total": self.total,
+            "expression": self.expression,
+            "comment": self.comment,
+            "components": self.rolls, 
+            "formatted_result_string": " ".join(formatted_expression)
         }
+        result["formatted_result_string"] = result["formatted_result_string"][2:]
+
+        return result

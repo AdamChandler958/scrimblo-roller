@@ -25,8 +25,8 @@ class DiceCommands(commands.Cog):
             color=discord.Color.purple()
         )
 
-        dice_embedding.add_field(name="Rolls", value=response["formatted_rolls"], inline=False)
-        dice_embedding.add_field(name="Total", value=str(response["total"]), inline=False)
+        dice_embedding.add_field(name="Rolls", value=response["formatted_result_string"], inline=False)
+        dice_embedding.add_field(name="Total", value=str(response["grand_total"]), inline=False)
 
         await interaction.response.send_message(embed=dice_embedding)
 
