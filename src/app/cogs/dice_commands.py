@@ -20,7 +20,7 @@ class DiceCommands(commands.Cog):
 
 
         dice_embedding = discord.Embed(
-            title="Dice Roll Results",
+            title=response["comment"],
             description=f"Results for `{response["expression"]}`",
             color=discord.Color.purple()
         )
