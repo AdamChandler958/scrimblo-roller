@@ -2,6 +2,13 @@ import random
 import re
 
 class DiceRoll:
+    """
+    The DiceRoll object handles the logic of dice rolls as well as formatted and calculating totals.
+
+    Args:
+        roll_string (str): The string representing the dice roll request.
+    """
+
     def __init__(self, request: str):
         self.request = request
         self.comment = "Dice Roll Results."
@@ -11,13 +18,40 @@ class DiceRoll:
         self.expression = None
 
     def parse_request(self):
+        """
+        Parses a dice roll request string to extract all components.
+
+        This function supports rolling any number of dice of any size, with optional
+        modifiers, keep-highest/keep-lowest logic, and an attached comment.
+
+        Returns:
+            A boolean for the validity of the request
+
+        Example Usage:
+            - `2d20+5`: Roll two 20-sided dice and add 5.
+            - `3d6kh2`: Roll three 6-sided dice and keep the 2 highest results.
+            - `d10-3`: Roll one 10-sided die and subtract 3.
+            - `10`: A simple modifier of 10.
+            - `2d4-1+2d8 This is a comment`: Multiple dice rolls and a comment.
+
+        The request string is parsed according to the following components:
+
+        | Component       | Description                                                     
+        |-----------------|-----------------------------------------------------------------
+        | `Number of Dice`| The number of dice to roll (optional, defaults to 1 if omitted).
+        | `Dice Size`     | The number of sides on the die.
+        | `Modifier`      | A number to add or subtract from the total roll.
+        | `Keep Highest`  | Keeps a specified number of the highest rolls.
+        | `Keep Lowest`   | Keeps a specified number of the lowest rolls.
+        | `Comment`       | A string of text after the roll expression.
+        """
+
         roll_pattern = re.compile(r"([+-]?)\s*(?:(\d*)d(\d+)(?:([kK][hH]|[kK][lL])(\d+))?|(\d+))")
 
         comment_pattern = re.compile(r"^(.*?)(?:\s+(.*))?$")
         
         match = comment_pattern.match(self.request)
         main_request = match.group(1)
-        print(main_request)
         self.expression = main_request
         self.comment = match.group(2).removesuffix(' ') if match.group(2) else "Dice Roll Results."
 
@@ -60,6 +94,14 @@ class DiceRoll:
         return True
 
     def perform_roll(self):
+        """
+        Based on the components extracted from DiceRoll.parse_request() each of the desired dice are rolled, logic applied
+        and total calculated.
+
+        After the dice have been rolled and values calculated a single call is made to format the output string for display
+        purposes.
+        """
+
         if not self.parse_request():
             return
         
@@ -113,6 +155,13 @@ class DiceRoll:
         return f"[{', '.join(formatted_parts)}]"
     
     def get_result(self) -> dict:
+        """
+        Retrieves the dice roll results and returns the current state of the DiceRoll object.
+
+        Returns:
+            result (dict): The formatted form of the results of the initial roll request.
+        """
+
         if self.error:
             return {"error": self.error}
             
