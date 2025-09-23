@@ -29,11 +29,11 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
+          username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Set the path to your project on the Droplet
-            PROJECT_PATH="/home/${{ secrets.SSH_USERNAME }}/your-project"
+            PROJECT_PATH="/home/${{ secrets.SSH_USER }}/your-project"
 
             # Check if the directory exists
             if [ ! -d "$PROJECT_PATH" ]; then
