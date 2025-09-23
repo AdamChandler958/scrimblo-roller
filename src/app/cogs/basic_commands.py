@@ -16,29 +16,41 @@ class BasicCommands(commands.Cog):
 
     @discord.app_commands.command(name="test", description="Test if bot is working")
     async def test_command(self, interaction: discord.Interaction):
-        """
-        Tests if the bot is responsive by sending a message.
-
-        Args:
-            interaction (discord.Interaction): The interaction object.
-        """
 
         await interaction.response.send_message("Slash command is working")
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.message.Message):
+    @discord.app_commands.command(name="help", description="Shows information on available commands.")
+    async def help_command(self, interaction: discord.Interaction):
         """
-        Listens for messages and responds to a specific phrase.
-
-        Args:
-            message (discord.message.Message): The message object.
+        Dynamically generates and sends a help message for all registered slash commands.
         """
 
-        if message.author == self.bot.user:
-            return
-        
-        if message.content.startswith('hello bot'):
-            await message.channel.send("Hello from the Cog!")
+        embed = discord.Embed(
+            title="Bot Help",
+            description="Here are all the available slash commands:",
+            color=discord.Color.blue()
+        )
+
+
+        for command in self.bot.tree.walk_commands():
+            name = command.name
+            description = command.description or "No description provided."
+            
+            docstring = command.callback.__doc__
+            
+            if docstring:
+                usage_info = docstring.strip()
+            else:
+                usage_info = "No usage information available."
+            
+            embed.add_field(
+                name=f"/{name}",
+                value=f"**Description:** {description}\n**Usage:** {usage_info}",
+                inline=False
+            )
+
+        await interaction.response.send_message(embed=embed)
+
 
 async def setup(bot: commands.Bot):
     """
@@ -47,6 +59,6 @@ async def setup(bot: commands.Bot):
     Args:
         bot (commands.Bot): The bot instance.
     """
-    
+
     await bot.add_cog(BasicCommands(bot))
 

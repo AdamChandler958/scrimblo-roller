@@ -17,11 +17,14 @@ class DiceCommands(commands.Cog):
     @discord.app_commands.describe(roll="The size and number of dice you wish to roll")
     async def roll_command(self, interaction: discord.Interaction, roll: str):
         """
-        Listens for the /roll command within a text channel and returns the result of that roll as an embedded message.
+        Parses a plain text dice command and generates an embedded output.
 
-        Args:
-            interaction (discord.Interaction): The interaction object.
-            roll (str): A plaintext request for the dice roll, optional modifiers, etc e.g ```1d20+8```
+        Examples:
+        - `2d20+5`: Roll two 20-sided dice and add 5.
+        - `3d6kh2`: Roll three 6-sided dice and keep the 2 highest results.
+        - `d10-3`: Roll one 10-sided die and subtract 3.
+        - `10`: A simple modifier of 10.
+        - `2d4-1+2d8 This is a comment`: Multiple dice rolls and a comment.
         """
 
         dice_roll = DiceRoll(roll)
@@ -52,5 +55,5 @@ async def setup(bot: commands.Bot):
     Args:
         bot (commands.Bot): The bot instance.
     """
-    
+
     await bot.add_cog(DiceCommands(bot))
