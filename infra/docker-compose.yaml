@@ -3,6 +3,7 @@ services:
     build: 
       context: ..
       dockerfile: Dockerfile
+    image: scrimblo-roller:latest
     secrets:
       - api_key
 
