@@ -15,7 +15,8 @@ class DiceCommands(commands.Cog):
 
     @discord.app_commands.command(name="roll", description="Roll some dice!")
     @discord.app_commands.describe(roll="The size and number of dice you wish to roll")
-    async def roll_command(self, interaction: discord.Interaction, roll: str):
+    @discord.app_commands.describe(is_milky="If you want the total to appear as the comment")
+    async def roll_command(self, interaction: discord.Interaction, roll: str, is_milky: bool=False):
         """
         Parses a plain text dice command and generates an embedded output.
 
@@ -35,15 +36,28 @@ class DiceCommands(commands.Cog):
             await interaction.response.send_message(response.get("error"), ephemeral=True)
             return
 
+        if is_milky:
 
-        dice_embedding = discord.Embed(
-            title=response["comment"],
-            description=f"Results for `{response["expression"]}`",
-            color=discord.Color.purple()
-        )
+            dice_embedding = discord.Embed(
+                title=str(response["grand_total"]),
+                description=f"Results for `{response["expression"]}`",
+                color=discord.Color.purple()
+            )
 
-        dice_embedding.add_field(name="Rolls", value=response["formatted_result_string"], inline=False)
-        dice_embedding.add_field(name="Total", value=str(response["grand_total"]), inline=False)
+            dice_embedding.add_field(name="Rolls", value=response["formatted_result_string"], inline=False)
+            if response["comment"] != "":
+                dice_embedding.add_field(name="Comment", value=response["comment"], inline=False)
+
+        else:
+            dice_embedding = discord.Embed(
+                title=response["comment"] if response["comment"] != "" else "Dice Results for Roll.",
+                description=f"Results for `{response["expression"]}`",
+                color=discord.Color.purple()
+            )
+
+            dice_embedding.add_field(name="Rolls", value=response["formatted_result_string"], inline=False)
+            dice_embedding.add_field(name="Total", value=str(response["grand_total"]), inline=False)
+
 
         await interaction.response.send_message(embed=dice_embedding)
 

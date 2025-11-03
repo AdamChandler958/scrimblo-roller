@@ -53,7 +53,7 @@ class DiceRoll:
         match = comment_pattern.match(self.request)
         main_request = match.group(1)
         self.expression = main_request
-        self.comment = match.group(2).removesuffix(' ') if match.group(2) else "Dice Roll Results."
+        self.comment = match.group(2).removesuffix(' ') if match.group(2) else ""
 
         components = roll_pattern.findall(main_request)
         
