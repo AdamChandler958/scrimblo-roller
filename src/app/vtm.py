@@ -30,3 +30,23 @@ class VtMRolls:
 
             elif val > 5:
                 self.successes += 1
+
+        self.successes += self.crit_successes // 2
+
+    def format_result(self):
+        if self.messy_critical:
+            result = "Messy Critical!"
+        elif self.successes <= 0:
+            result = "Failure."
+        elif self.bestial_fail:
+            result = f"{self.successes} success(es). However, if this fails the result is a Beastial Failure."
+        else:
+            result = f"{self.successes} success(es)."
+
+        successes = [":green_square:" for _ in len(self.successes)]
+        fails = [":grey_square:" for _ in len(self.dice_pool - self.successes)]
+
+        formatted_squares = successes + fails
+        formatted_squares = random.shuffle(formatted_squares)
+
+        return {"overall_result": result, "squares": "".join(formatted_squares)}
