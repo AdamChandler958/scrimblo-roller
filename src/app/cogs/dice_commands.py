@@ -87,7 +87,13 @@ class DiceCommands(commands.Cog):
 
         dice_roll = VtMRolls(dice_pool, hunger)
         dice_roll.generate()
-        response = dice_roll.format_result()
+
+        try:
+            response = dice_roll.format_result()
+        except Exception as e:
+            await interaction.response.send_message(
+                f"Error in format {e}", ephemeral=True
+            )
 
         dice_embedding = discord.Embed(
             title=response["overall_result"],

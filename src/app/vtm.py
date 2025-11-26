@@ -12,41 +12,53 @@ class VtMRolls:
         self.successes = 0
         self.crit_successes = 0
 
+        self.crit_fails = 0
+
+        self.key_val: dict[int, str] = {}
+
     def generate(self):
         for i in range(self.dice_pool):
             val = random.randint(1, 10)
 
             is_hunger = self.hunger is not None and i < self.hunger
 
+            # Change to count hunger dice into a different section
             if val == 1:
-                self.successes -= 1
+                self.crit_fails += 1
+                self.key_val[i] = ":red_square:"
                 if is_hunger:
                     self.bestial_fail = True
 
             elif val == 10:
                 self.crit_successes += 1
+                self.key_val[i] = ":white_check_mark:"
                 if is_hunger:
                     self.messy_critical = True
 
             elif val > 5:
                 self.successes += 1
+                self.key_val[i] = ":green_square:"
 
-        self.successes += self.crit_successes // 2
+            else:
+                self.key_val[i] = ":black_large_square:"
+
+    def _calc_total(self):
+        return (
+            self.successes
+            + (self.crit_successes % 2)
+            + 4 * (self.crit_successes // 2)
+            + -self.crit_fails
+        )
 
     def format_result(self):
+        total = self._calc_total()
         if self.messy_critical:
             result = "Messy Critical!"
-        elif self.successes <= 0:
+        elif total <= 0:
             result = "Failure."
         elif self.bestial_fail:
-            result = f"{self.successes} success(es). However, if this fails the result is a Beastial Failure."
+            result = f"{total} success(es). However, if this fails the result is a Beastial Failure."
         else:
-            result = f"{self.successes} success(es)."
+            result = f"{total} success(es)."
 
-        successes = [":green_square:" for _ in len(self.successes)]
-        fails = [":grey_square:" for _ in len(self.dice_pool - self.successes)]
-
-        formatted_squares = successes + fails
-        formatted_squares = random.shuffle(formatted_squares)
-
-        return {"overall_result": result, "squares": "".join(formatted_squares)}
+        return {"overall_result": result, "squares": "".join(self.key_val.values())}
