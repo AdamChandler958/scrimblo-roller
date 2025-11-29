@@ -1,13 +1,8 @@
 services:
   scrimblo-roller:
-    build: 
+    build:
       context: ..
       dockerfile: Dockerfile
     image: scrimblo-roller:latest
-    secrets:
-      - api_key
-
-
-secrets:
-  api_key:
-    file: ../.docker-secrets/api_key.txt
+    environment:
+      - API_KEY=${API_KEY}
