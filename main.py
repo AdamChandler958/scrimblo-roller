@@ -10,6 +10,8 @@ from src.app.utils import get_secret
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
+IS_DEV = os.getenv('IS_DEV', 'True').lower() in ('true', '1', 't')
+DEV_GUILD_WHITELIST = [1312692823820210216] # Test server id
 
 
 intents = discord.Intents.default()
@@ -35,10 +37,18 @@ async def load_cogs():
 @bot.event
 async def on_ready():
     print (f"We have logged in as {bot.user}")
-    await load_cogs()
+    if IS_DEV:
+        for guild in bot.guilds:
+            if guild.id in DEV_GUILD_WHITELIST:
 
-    synced = await bot.tree.sync()
-    print(f"Synced {len(synced)} command(s)!")
+                await load_cogs()
+                synced = await bot.tree.sync()
+                print(f"Synced {len(synced)} command(s)!")
+                
+    else:
+        await load_cogs()
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} command(s)!")
 
 bot.run(get_secret("api_key"))
 

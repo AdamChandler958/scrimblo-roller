@@ -17,7 +17,7 @@ class BasicCommands(commands.Cog):
     @discord.app_commands.command(name="test", description="Test if bot is working")
     async def test_command(self, interaction: discord.Interaction):
 
-        await interaction.response.send_message("Slash command is working")
+        await interaction.response.send_message("Slash command is working in dev environ")
 
     @discord.app_commands.command(name="help", description="Shows information on available commands.")
     async def help_command(self, interaction: discord.Interaction):
