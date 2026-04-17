@@ -3,8 +3,11 @@ import random
 
 class VtMRolls:
     def __init__(self, dice_pool: int, hunger: int = None):
-        self.dice_pool = dice_pool
+        self.dice_pool = dice_pool 
         self.hunger = hunger
+
+        if self.hunger is not None:
+            self.dice_pool += self.hunger
 
         self.bestial_fail = False
         self.messy_critical = False
